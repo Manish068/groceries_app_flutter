@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:groceries_app/widgets/new_item.dart';
 
 import '../data/dummy/groceries_item.dart';
 
 
-class GroceryList extends StatelessWidget {
+class GroceryList extends StatefulWidget {
   const GroceryList({Key? key}) : super(key: key);
+
+  @override
+  State<GroceryList> createState() => _GroceryListState();
+}
+
+class _GroceryListState extends State<GroceryList> {
+  void _addItem(){
+    Navigator.of(context).push(MaterialPageRoute(builder: (_)=> const NewItem()));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,6 +23,9 @@ class GroceryList extends StatelessWidget {
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text("Grocery list"),
+        actions: [
+          IconButton(onPressed: _addItem, icon: const Icon(Icons.add))
+        ],
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
