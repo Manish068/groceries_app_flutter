@@ -19,7 +19,7 @@ class GroceryList extends StatefulWidget {
 class _GroceryListState extends State<GroceryList> {
    List<Grocery> _groceryItems = [];
    var isLoading = true;
-
+   String? _error;
   @override
   void initState() {
     _loadItems();
@@ -34,26 +34,43 @@ class _GroceryListState extends State<GroceryList> {
       'Content-type': 'application/json',
     });
 
-    if(response.statusCode==200){
-      print(response.body);
+    if(response.statusCode >=400) {
+      setState(() {
+        _error = "Failed to fetch data. Please try again later.";
+      });
 
-     final Map<String,dynamic> listData = json.decode(response.body);
-     final List<Grocery> _loadedItems =[];
-     for(final item in listData.entries){
-       final category = categories.entries.firstWhere((category) => category.value.categoryName == item.value['category']).value;
-       _loadedItems.add(Grocery(id: item.key, name: item.value['name'], quantity: item.value['quantity'], categories: category));
-     }
-
-     setState(() {
-       _groceryItems = _loadedItems;
-        isLoading=false;
-     });
-    }else{
-      isLoading=false;
     }
+
+    if(response.body == 'null'){
+      setState(() {
+        isLoading=false;
+      });
+      return;
+    }
+
+
+
+
+    final Map<String,dynamic> listData = json.decode(response.body);
+    final List<Grocery> _loadedItems =[];
+    for(final item in listData.entries){
+      final category = categories.entries.firstWhere((category) => category.value.categoryName == item.value['category']).value;
+      _loadedItems.add(Grocery(id: item.key, name: item.value['name'], quantity: item.value['quantity'], categories: category));
+    }
+
+    setState(() {
+      _groceryItems = _loadedItems;
+      isLoading=false;
+    });
   }
 
   void _addItem() async {
+    final url = Uri.https("grocery-app-dc9d2-default-rtdb.firebaseio.com",
+        'Shopping-list.json');
+
+    final response = await http.get(url, headers: {
+      'Content-type': 'application/json',
+    });
 
     final newItem =await Navigator.of(context).push<Grocery>(MaterialPageRoute(builder: (_)=> const NewItem())) as Grocery;
     setState(() {
@@ -63,10 +80,22 @@ class _GroceryListState extends State<GroceryList> {
 
   }
   
-  void _removeItem(Grocery item){
+  void _removeItem(Grocery item) async {
+    final index = _groceryItems.indexOf(item);
+    setState(() {
+      _groceryItems.remove(item);
+    });
+    final url = Uri.https("grocery-app-dc9d2-default-rtdb.firebaseio.com",
+        'Shopping-list/${item.id}.json');
+
+    final response = await http.delete(url);
+
+    if(response.statusCode>400){
       setState(() {
-        _groceryItems.remove(item);
+        _groceryItems.insert(index,item);
       });
+    }
+
   }
 
   @override
@@ -101,6 +130,10 @@ class _GroceryListState extends State<GroceryList> {
               );
             }),
       );
+    }
+
+    if(_error!=null){
+       content = Center(child: Text(_error!));
     }
 
     return Scaffold(

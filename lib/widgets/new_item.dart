@@ -21,6 +21,7 @@ class _NewItemState extends State<NewItem> {
   var _selectedCategory = categories[Categories.vegetables];
   var _isSending = false;
 
+
   void _saveItem() async {
     //this validate function will call all the validate functions present in form widget
     if (_formKey.currentState!.validate()) {
@@ -144,11 +145,8 @@ class _NewItemState extends State<NewItem> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                      onPressed: _isSending
-                          ? null
-                          : () {
-                              _formKey.currentState!.reset();
-                            },
+                      onPressed: _isSending ? null : () => _formKey.currentState!.reset()
+                            ,
                       child: const Text('Reset')),
                   if (!_isSending)
                     ElevatedButton(
